@@ -3,8 +3,8 @@ using System.Collections.Generic;
 public class GameMaster : MonoBehaviour 
 {
 	public static GameMaster GM;
-	public int mapMaxWidth = 45;
-	public int mapMaxHeight = 45;
+	public int mapMaxWidth = 153;
+	public int mapMaxHeight = 153;
 	public const int roomDimensions = 9;
 	public const int tileSize = 32;
 	public int roomCount = 0;
@@ -21,12 +21,13 @@ public class GameMaster : MonoBehaviour
 	private int[] roomArray7 = new int[81] {5,7,7,7,7,7,7,7,10,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,1,0,9,4,0,1,0,0,0,0,0,9,4,0,1,0,1,0,0,0,9,4,0,0,0,0,0,1,0,9,4,0,0,0,0,0,0,0,9,3,6,6,6,6,6,6,6,8};
 	private int[] roomArray8 = new int[81] {5,7,7,7,7,7,7,7,10,4,0,0,0,0,0,0,0,9,4,0,0,1,1,0,0,0,9,4,0,0,0,0,0,1,0,9,4,0,1,0,1,0,0,0,9,4,0,0,0,0,1,0,0,9,4,0,1,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,6,6,6,6,6,6,6,8};
 	private int[] roomArray9 = new int[81] {5,7,7,7,7,7,7,7,10,4,0,0,0,0,0,0,0,9,4,0,0,0,1,0,0,0,9,4,0,0,0,0,0,1,0,9,4,0,1,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,1,0,0,1,0,9,4,0,0,0,0,0,0,0,9,3,6,6,6,6,6,6,6,8};
-	private int[] roomArray10 = new int[81] {5,7,7,7,7,7,7,7,10,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,1,0,9,4,0,1,1,0,1,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,1,0,0,0,0,9,4,0,0,0,0,1,0,0,9,4,0,0,0,0,0,0,0,9,3,6,6,6,6,6,6,6,8};
+	private int[] roomArray10 = new int[81] {5,7,7,7,7,7,7,7,10,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,1,0,9,4,0,1,1,0,1,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,1,0,0,0,0,9,4,0,0,0,0,1,0,0,9,4,0,1,0,0,0,1,0,9,3,6,6,6,6,6,6,6,8};
 	private int[] roomArray11 = new int[81] {5,7,7,7,7,7,7,7,10,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,4,0,0,0,0,0,0,0,9,3,6,6,6,6,6,6,6,8};
 	public List<List<List<int>>> roomsHardCoded2 = new List<List<List<int>>>();
-	public GameObject[,] tileMap = new GameObject[45,45];
+	public GameObject[,] tileMap = new GameObject[153,153];
 	public GameObject player;
 	public GameObject mainplayer;
+	public GameObject enemy;
 	Transform Map;
 	Transform ParentMap;
 	void Awake()
@@ -67,22 +68,14 @@ public class GameMaster : MonoBehaviour
 		addRoomIDs (roomArray9);
 		addRoomIDs (roomArray10);
 		addRoomIDs (roomArray11);
-		Debug.Log (roomsHardCoded2.Count);
 		int middlerow = (int) (mapMaxHeight / 2f - roomDimensions / 2f);
 		int middlecol = (int) (mapMaxWidth / 2f - roomDimensions / 2f);
-		//roomDirections (0, middlerow, middlecol);
 		GenerateRoom (roomCount, (int)(Random.Range (0, roomsHardCoded2.Count)), middlerow, middlecol);
-		//Map.position = new Vector2 (((tileSize*roomDimensions/2)-tileSize/2)/100f, ((tileSize*roomDimensions)/2-tileSize/2)/100f);
-		//Map.position = new Vector2 ((middlerow)/100f, (middlecol)/100f);
 		Map.parent = ParentMap;
-		//Camera.main.transform.position = new Vector2 (middlerow, middlecol);
-		//createRoomPassage (roomCount);
 		int randomRoom = 0;
 		while (roomCount < totalRooms && roomList.Count > 0) {
 			randomRoom = (int)(Random.Range (0, roomList.Count));
 			if (roomList [randomRoom] [1].Count > 0) {
-				Debug.Log (randomRoom);
-				//GenerateRoom (Random.Range (0, roomsHardCoded2.Count-1), middlerow, middlecol);
 				createRoomPassage (randomRoom);
 			}
 		}
@@ -97,10 +90,35 @@ public class GameMaster : MonoBehaviour
 			roomRow = roomList [randomRoom] [0] [0];
 			roomCol = roomList [randomRoom] [0] [1];
 			if (tileMap [roomRow + randX, roomCol + randY].GetComponent<TileProperties> ().tileID == 0) {
+				//tileMap [roomRow + randX, roomCol + randY].GetComponent<TileProperties> ().occupied = true;
 				break;
 			}
 		}
 		createPlayer (roomRow + randX, roomCol + randY);
+		createEnemies ();
+	}
+	void createEnemies() {
+		for (int x = 0; x < roomList.Count; x++) {
+			int roomRow = roomList [x] [0] [0];
+			int roomCol = roomList [x] [0] [1];
+			while (true) {
+				int randX = roomRow + (int)(Random.Range(2,7));
+				int randY = roomCol + (int)(Random.Range(2,7));
+				if (!tileMap [randX,randY].GetComponent<TileProperties> ().occupied) {
+					Debug.Log ("RandX" + randX + " RandY" + randY);
+					tileMap [randX, randY].GetComponent<TileProperties> ().occupied = true;
+					tileMap [randX, randY].GetComponent<TileProperties> ().hasenemy = true;
+
+					GameObject enemy1 = Instantiate (enemy) as GameObject;
+					enemy1.transform.position = new Vector2 (((randX) * (tileSize))/100f, ((randY) * (tileSize))/100f);
+					tileMap [randX, randY].GetComponent<TileProperties> ().enemy = enemy1;
+					//enemy1.GetComponent<CharacterClass> ().posX = randX;
+					//enemy1.GetComponent<CharacterClass> ().posY = randY;
+					break;
+				}
+			}
+		}
+		Debug.Log ("Creating Enemies");
 	}
 	void createPlayer(int row, int col) {
 		mainplayer = Instantiate (player) as GameObject;
@@ -112,6 +130,12 @@ public class GameMaster : MonoBehaviour
 		//Camera.main.transform.position = new Vector2 (((row+tileSize*roomDimensions/2))/100f, ((col+tileSize*roomDimensions)/2)/100f);
 		//Camera.main.transform.position = new Vector2 ((row)/100f, (col)/100f);
 		//player.transform.position = player.transform.position + Vector3.forward;
+	}
+	public void destroyEnemy(int row, int col) {
+		Debug.Log ("DESTROYING");
+		tileMap [row, col].GetComponent<TileProperties> ().hasenemy = false;
+		Destroy (tileMap [row, col].GetComponent<TileProperties> ().enemy);
+		tileMap [row, col].GetComponent<TileProperties> ().occupied = false;
 	}
 	void roomDirections(int roomNumber, int row, int col) {
 		roomList.Add (new List<List<int>> ());
@@ -161,21 +185,11 @@ public class GameMaster : MonoBehaviour
 			}
 		}
 		List<int> passageRand = new List<int>(7) { 1, 2, 3, 4, 5, 6, 7 };
-		bool pathMade = false;
 		int tileChosen = (int)(Random.Range (0, passageRand.Count));
 		roomCount++;
 		if (dir == 0) {
-			//while (!pathMade) {
-			//tileChosen = (int)(Random.Range (0, passageRand.Count));
-			/*	if (0 == tileMap [rRow + passageRand [tileChosen], rCol + roomDimensions - 2].GetComponent<TileProperties> ().tileID) {
-					pathMade = true;
-					break;
-				}
-				if (!pathMade)
-					passageRand.Remove (tileChosen);
-			}*/
 			if (GenerateRoom (roomCount, (int)(Random.Range (0, roomsHardCoded2.Count)), rRow, rCol + roomDimensions, rRow + passageRand [tileChosen], rCol + roomDimensions)) {
-				tileMap [rRow + passageRand [tileChosen], rCol + roomDimensions - 1].GetComponent<TileProperties> ().tileID = 0;
+				tileMap [rRow + passageRand [tileChosen], rCol + roomDimensions - 1].GetComponent<TileProperties> ().setTileID(0);
 				tileMap [rRow + passageRand [tileChosen], rCol + roomDimensions - 1].GetComponent<SpriteRenderer> ().sprite = tileSet [0];
 				dirRemove (roomCount, 2);
 			} else {
@@ -183,18 +197,8 @@ public class GameMaster : MonoBehaviour
 				roomCount--;
 			}
 		} else if (dir == 1) {
-			//while (!pathMade) {
-			//tileChosen = (int)(Random.Range (0, passageRand.Count));
-			/*if (0 == tileMap [rRow + 1, rCol + passageRand [tileChosen]].GetComponent<TileProperties> ().tileID) {
-					pathMade = true;
-					break;
-				}
-				if (!pathMade) {
-					passageRand.Remove (tileChosen);
-				}
-			}*/
 			if (GenerateRoom (roomCount, (int)(Random.Range (0, roomsHardCoded2.Count - 1)), rRow - roomDimensions, rCol, rRow-1, rCol + passageRand [tileChosen])) {
-				tileMap [rRow, rCol + passageRand [tileChosen]].GetComponent<TileProperties> ().tileID = 0;
+				tileMap [rRow, rCol + passageRand [tileChosen]].GetComponent<TileProperties> ().setTileID(0);
 				tileMap [rRow, rCol + passageRand [tileChosen]].GetComponent<SpriteRenderer> ().sprite = tileSet [0];
 				dirRemove (roomCount, 3);
 			} else {
@@ -202,18 +206,8 @@ public class GameMaster : MonoBehaviour
 				roomCount--;
 			}
 		} else if (dir == 2) {
-			//while (!pathMade) {
-
-			/*if (0 == tileMap [rRow + passageRand [tileChosen], rCol+1].GetComponent<TileProperties> ().tileID) {
-					pathMade = true;
-					break;
-				}
-				if (!pathMade) {
-					passageRand.Remove (tileChosen);
-				}
-			}*/
 			if (GenerateRoom (roomCount, (int)(Random.Range (0, roomsHardCoded2.Count)), rRow, rCol-roomDimensions, rRow + passageRand [tileChosen], rCol-1)) {
-				tileMap [rRow + passageRand [tileChosen], rCol].GetComponent<TileProperties> ().tileID = 0;
+				tileMap [rRow + passageRand [tileChosen], rCol].GetComponent<TileProperties> ().setTileID(0);
 				tileMap [rRow + passageRand [tileChosen], rCol].GetComponent<SpriteRenderer> ().sprite = tileSet [0];
 				dirRemove (roomCount, 0);
 			} else {
@@ -222,7 +216,7 @@ public class GameMaster : MonoBehaviour
 			}
 		} else {
 			if (GenerateRoom (roomCount, (int)(Random.Range (0, roomsHardCoded2.Count)), rRow + roomDimensions, rCol, rRow + roomDimensions, rCol + passageRand [tileChosen])) {
-				tileMap [rRow + roomDimensions-1, rCol + passageRand [tileChosen]].GetComponent<TileProperties> ().tileID = 0;
+				tileMap [rRow + roomDimensions-1, rCol + passageRand [tileChosen]].GetComponent<TileProperties> ().setTileID(0);
 				tileMap [rRow + roomDimensions-1, rCol + passageRand [tileChosen]].GetComponent<SpriteRenderer> ().sprite = tileSet [0];
 				dirRemove (roomCount, 1);
 			} else {
@@ -260,14 +254,14 @@ public class GameMaster : MonoBehaviour
 				newGO.AddComponent<SpriteRenderer> ();
 				int roomID = roomsHardCoded2 [roomSelected] [x] [y];
 				newGO.GetComponent<SpriteRenderer> ().sprite = tileSet[roomID];
-				newGO.GetComponent<TileProperties> ().tileID = roomID;
+				newGO.GetComponent<TileProperties> ().setTileID(roomID);
 				newGO.transform.position = new Vector2 (((row + x) * (tileSize))/100f, ((col + y) * (tileSize))/100f);
 				tileMap [row + x, col + y] = newGO;
 				newGO.transform.parent = Map;
 			}
 		}
 		if (passageRow != -1 && passageCol != -1) {
-			tileMap [passageRow, passageCol].GetComponent<TileProperties> ().tileID = 0;
+			tileMap [passageRow, passageCol].GetComponent<TileProperties> ().setTileID(0);
 			tileMap [passageRow, passageCol].GetComponent<SpriteRenderer> ().sprite = tileSet [0];
 		}
 		return true;
