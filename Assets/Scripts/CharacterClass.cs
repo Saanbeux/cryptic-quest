@@ -31,7 +31,7 @@ public class CharacterClass : MonoBehaviour {
 			}
 		}
 		if (Input.GetKeyDown (KeyCode.RightArrow)) {
-			if (GameMaster.GM.tileMap [posX+1, posY].GetComponent<TileProperties> ().occupied) {
+			if (!GameMaster.GM.tileMap [posX+1, posY].GetComponent<TileProperties> ().occupied) {
 				StartCoroutine (Move (new Vector3 (32f / 100f, 0, 0),true,true));
 			}
 		}
